@@ -1,12 +1,9 @@
 from typing import Optional
-
-
 from fastapi import FastAPI, HTTPException
 
-import joblib
 from pydantic import BaseModel
 
-
+import joblib
 model = joblib.load('knn_model.joblib')
 scaler = joblib.load('scaler.joblib')
 
@@ -27,26 +24,9 @@ def read_root():
 
 
 # get request
-@app.get("/items")
-def create_item(item: str):
-    print(item)
-    items[item] = 0
-    return items
-
-
-@app.get("/update")
-def update_item(item: str, value: int):
-    if items.get(item, None) == None:
-        return "error: item not found"
-
-    items[item] = value
-    return items[item]
-
-
-@app.get("/all")
-def get_items_item():
-    return items
-
+@app.get("/items/")
+def create_item(item: dict):
+    return {"item": item}
 
 
 # Define a Pydantic model for input data validation
@@ -57,27 +37,24 @@ class InputFeatures(BaseModel):
     Type: str
     Make: str
     Options: str
-
-
 def preprocessing(input_features: InputFeatures):
     dict_f = {
-    'Year': input_features.Year,
-    'Engine_Size': input_features.Engine_Size,
-    'Mileage': input_features.Mileage,
-    'Type_Accent': input_features.Type == 'Accent',
-    'Type_Land Cruiser': input_features.Type == 'LandCruiser',
-    'Make_Hyundai': input_features.Make == 'Hyundai',
-    'Make_Mercedes': input_features.Make == 'Mercedes',
-    'Options_Full': input_features.Options == 'Full',
-    'Options_Standard': input_features.Options == 'Standard'
-    }
-
-    #return dict_f
-    #Convert dictionary values to a list in the correct order
+        'Year': input_features.Year,
+        'Engine_Size': input_features.Engine_Size,
+        'Mileage': input_features.Mileage,
+        'Type_Accent': input_features.Type == 'Accent',
+        'Type_Land Cruiser': input_features.Type == 'Land Cruiser',
+        'Make_Hyundai': input_features.Make == 'Hyundai',
+        'Make_Mercedes': input_features.Make == 'Mercedes',
+        'Options_Full': input_features.Options == 'Full',
+        'Options_Standard': input_features.Options == 'Standard'}
+    
+    # Convert dictionary values to a list in the correct order
     features_list = [dict_f[key] for key in sorted(dict_f)]
-    # Scale the input features 
+    # Scale the input features
     scaled_features = scaler.transform([list(dict_f.values())])
-    return scaled_features
+    return scaled_features  
+
 
 
 @app.post("/predict")
